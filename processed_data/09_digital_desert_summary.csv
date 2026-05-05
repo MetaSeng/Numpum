@@ -1,0 +1,5 @@
+digital_desert_class,communities,provinces,avg_distance_km,avg_flood_score,est_population_community
+E: Lower Priority (Current Data),26,"Kratie, Mondulkiri, Ratanakiri, Stung Treng",21.200269950102534,57.826410913263956,12682.199999999999
+B: High Risk + Better Connectivity,7,Ratanakiri,18.211058745288156,88.78118487336783,4296.4
+D: Low Risk + Low Connectivity,7,"Mondulkiri, Ratanakiri, Stung Treng",46.094002874392274,62.66841688040461,1642.1999999999998
+A: High Risk + Low Connectivity,4,"Mondulkiri, Ratanakiri",40.94734641364883,90.14226049652376,855.5999999999999

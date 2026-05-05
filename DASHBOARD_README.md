@@ -45,6 +45,15 @@ An interactive web-based dashboard for visualizing and analyzing connectivity ga
    - Intervention framework
    - Actionable policy guidance
 
+### 🧭 New Story Journey (Interpretability-First)
+
+The latest dashboard redesign now follows a guided narrative:
+1. Start Here (problem framing)
+2. Data Evidence (what data, why it matters)
+3. Explainable Model (rule-based logic)
+4. Map Explorer (where digital deserts are)
+5. Priority Actions (implementation plan)
+
 ---
 
 ## 🚀 Quick Start
@@ -52,6 +61,11 @@ An interactive web-based dashboard for visualizing and analyzing connectivity ga
 ### 1. Install Dependencies
 ```bash
 pip install -r requirements.txt
+```
+
+For ETL/notebook work:
+```bash
+pip install -r requirements-dev.txt
 ```
 
 ### 2. Run the Dashboard
@@ -192,8 +206,12 @@ This dashboard transforms raw geospatial and demographic data into **actionable 
 To update the dashboard with new data:
 
 1. Re-run the ETL pipeline: `jupyter notebook etl.ipynb`
-2. Ensure new files are in `./processed_data/`
-3. Restart Streamlit: `streamlit run dashboard.py`
+2. Rebuild digital desert modeling outputs: `python build_digital_desert_model.py`
+3. Ensure new files are in `./processed_data/`
+4. Restart Streamlit: `streamlit run dashboard.py`
+
+See: `MODELING_UPDATE.md` for methodology and assumptions.
+See: `ARCHITECTURE_DIAGRAMS.md` for ETL/architecture/modeling diagrams.
 
 ---
 
@@ -205,6 +223,14 @@ After exploring the dashboard:
 2. **For Mapping**: Import GeoJSON files into QGIS for detailed cartography
 3. **For Policy**: Use insights to draft targeted intervention proposals
 4. **For Implementation**: Build on findings to design pilot programs
+
+---
+
+## ☁️ Free Deployment
+
+Use Streamlit Community Cloud for the easiest free deployment of this Python dashboard.
+
+See: `DEPLOYMENT.md`
 
 ---
 
