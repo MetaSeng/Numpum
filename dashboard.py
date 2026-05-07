@@ -16,9 +16,13 @@ import folium
 import geopandas as gpd
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
 from folium.plugins import HeatMap
 from streamlit_folium import st_folium
+
+px.defaults.template = "plotly_dark"
+px.defaults.color_discrete_sequence = ["#38bdf8", "#2dd4bf", "#22c55e", "#f59e0b", "#ef4444", "#8b5cf6"]
 
 
 st.set_page_config(
@@ -173,56 +177,80 @@ def style_dashboard():
     st.markdown(
         """
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Source+Sans+3:wght@400;600;700&display=swap');
 :root {
-  --bg1: #f7fafc;
-  --bg2: #e6f0ff;
-  --ink: #0f172a;
-  --accent: #0b6bcb;
+  --surface: #0f172a;
+  --surface-2: #111827;
+  --panel: rgba(15, 23, 42, 0.78);
+  --ink: #e5e7eb;
+  --muted: #94a3b8;
+  --line: #334155;
+  --brand: #2b6cf3;
+  --brand-2: #06b6d4;
+  --warm: #f59e0b;
 }
 .stApp {
-  font-family: 'Manrope', sans-serif;
-  background: radial-gradient(circle at 5% 0%, #0f172a 0%, #020617 45%, #000814 100%);
+  font-family: 'Source Sans 3', sans-serif;
+  background: radial-gradient(1100px 600px at 10% -8%, #1e293b 0%, #0b1220 36%, #050b17 100%);
+  color: var(--ink);
 }
 .stButton > button {
-  border-radius: 999px;
-  border: 1px solid #334155;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, #111b2f 0%, #0d1526 100%);
+  color: #dbeafe;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.1px;
+  transition: all 180ms ease;
+  min-height: 42px;
 }
 .stButton > button[kind="primary"] {
-  background: linear-gradient(90deg, #2563eb 0%, #14b8a6 100%);
-  color: white;
-  border: none;
+  background: linear-gradient(94deg, var(--brand) 0%, var(--brand-2) 100%);
+  color: #f8fafc;
+  border: 1px solid transparent;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.28);
+}
+.stButton > button:hover {
+  transform: translateY(-1px);
+  border-color: #60a5fa;
+  box-shadow: 0 8px 18px rgba(2, 6, 23, 0.35);
 }
 .story-hero {
-  background: linear-gradient(120deg, #f8fafc 0%, #dbeafe 42%, #e0f2fe 100%);
-  border: 1px solid #93c5fd;
-  border-radius: 14px;
-  padding: 20px 24px;
-  color: var(--ink);
-  margin-bottom: 16px;
+  background:
+    radial-gradient(800px 300px at 85% 10%, rgba(59,130,246,0.18) 0%, rgba(15,23,42,0) 55%),
+    linear-gradient(160deg, #111b2f 0%, #0b1324 60%, #0a1020 100%);
+  border: 1px solid #334155;
+  border-radius: 16px;
+  padding: 22px 24px;
+  color: #e2e8f0;
+  margin-bottom: 14px;
+  box-shadow: 0 20px 40px rgba(2, 6, 23, 0.38);
 }
 .story-pill {
   display: inline-block;
-  border-radius: 999px;
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  color: #0f172a;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: #0f1a2e;
+  color: #cbd5e1;
   padding: 4px 10px;
   font-size: 12px;
   margin-right: 8px;
+  font-family: 'Space Grotesk', sans-serif;
 }
 .nav-wrap {
-  border: 1px solid #dbeafe;
+  border: 1px solid #243449;
   border-radius: 12px;
   padding: 10px 14px 2px 14px;
-  background: #f8fbff;
-  margin-bottom: 10px;
+  background: var(--panel);
+  backdrop-filter: blur(8px);
+  margin-bottom: 12px;
 }
 .filter-wrap {
-  border: 1px solid #dbeafe;
+  border: 1px solid #243449;
   border-radius: 12px;
   padding: 12px 14px 10px 14px;
-  background: #ffffff;
+  background: rgba(12, 19, 35, 0.86);
   margin-bottom: 14px;
 }
 .diagram-row {
@@ -233,8 +261,8 @@ def style_dashboard():
 }
 .diagram-card {
   flex: 1 1 180px;
-  background: linear-gradient(135deg, #0b1220 0%, #13233a 100%);
-  border: 1px solid #1e3a5f;
+  background: linear-gradient(135deg, #101a30 0%, #0f1d33 100%);
+  border: 1px solid #304663;
   color: #e2e8f0;
   border-radius: 12px;
   padding: 14px;
@@ -242,21 +270,127 @@ def style_dashboard():
 }
 .diagram-card h5 {
   margin: 0 0 8px 0;
-  color: #93c5fd;
+  color: #7dd3fc;
   font-size: 14px;
+  font-family: 'Space Grotesk', sans-serif;
 }
 .diagram-arrow {
   align-self: center;
-  color: #22d3ee;
+  color: #38bdf8;
   font-size: 22px;
   padding: 0 2px;
 }
 .mini-note {
-  border-left: 4px solid #22d3ee;
-  background: #0b1529;
+  border-left: 4px solid #38bdf8;
+  background: rgba(9, 16, 30, 0.9);
   border-radius: 8px;
   padding: 10px 12px;
   color: #cbd5e1;
+}
+.insight-card {
+  border: 1px solid #2a3f5d;
+  background: linear-gradient(170deg, rgba(17, 26, 46, 0.95) 0%, rgba(12, 20, 35, 0.95) 100%);
+  border-radius: 14px;
+  padding: 12px 14px 8px 14px;
+}
+.insight-title {
+  font-family: 'Space Grotesk', sans-serif;
+  color: #f8fafc;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+.insight-sub {
+  color: #9fb3c8 !important;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+.flow-wrap {
+  border: 1px solid #2f445f;
+  border-radius: 14px;
+  padding: 14px;
+  background: rgba(12, 20, 35, 0.85);
+}
+.flow-row {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.flow-node {
+  flex: 1 1 190px;
+  border: 1px solid #335173;
+  border-radius: 12px;
+  padding: 12px;
+  background: linear-gradient(160deg, #12213a 0%, #0d182b 100%);
+}
+.flow-node h5 {
+  margin: 0 0 6px 0;
+  color: #a5d8ff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+}
+.flow-arrow {
+  align-self: center;
+  color: #60a5fa;
+  font-size: 24px;
+  padding: 0 2px;
+}
+.phase-card {
+  border: 1px solid #31507b;
+  border-radius: 12px;
+  padding: 12px;
+  background: linear-gradient(165deg, rgba(18, 30, 53, 0.95) 0%, rgba(12, 22, 40, 0.95) 100%);
+}
+.source-card {
+  border: 1px solid #2b425f;
+  border-radius: 12px;
+  background: linear-gradient(165deg, rgba(17, 27, 48, 0.95) 0%, rgba(13, 22, 39, 0.95) 100%);
+  padding: 12px 14px;
+  min-height: 98px;
+}
+.source-card h5 {
+  margin: 0 0 5px 0;
+  font-size: 14px;
+  color: #bfdbfe;
+  font-family: 'Space Grotesk', sans-serif;
+}
+.source-card p {
+  margin: 0;
+  font-size: 13px;
+  color: #b9c7d8 !important;
+}
+.action-card {
+  border: 1px solid #2a3f5d;
+  border-radius: 12px;
+  padding: 12px;
+  background: linear-gradient(160deg, rgba(15, 27, 48, 0.95) 0%, rgba(12, 20, 36, 0.95) 100%);
+}
+.action-card h5 {
+  margin: 0 0 6px 0;
+  font-size: 14px;
+  color: #93c5fd;
+  font-family: 'Space Grotesk', sans-serif;
+}
+h1, h2, h3, h4 {
+  font-family: 'Space Grotesk', sans-serif !important;
+  color: #f8fafc !important;
+  letter-spacing: -0.2px;
+}
+p, span, label, .stMarkdown, .stCaption {
+  color: #cbd5e1 !important;
+}
+div[data-testid="stMetric"] {
+  background: linear-gradient(180deg, rgba(16, 25, 44, 0.92) 0%, rgba(10, 17, 30, 0.92) 100%);
+  border: 1px solid #2a3c54;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+div[data-baseweb="select"] > div {
+  background: #0f1a2d;
+  border-color: #334155;
+}
+div[data-baseweb="select"] * {
+  color: #e2e8f0 !important;
 }
 </style>
         """,
@@ -361,10 +495,10 @@ def render_header():
     st.markdown(
         """
 <div class="story-hero">
-  <div class="story-pill"><i class="fa-solid fa-circle-check"></i> Interpretability First</div>
-  <div class="story-pill"><i class="fa-solid fa-landmark"></i> Policy-Oriented</div>
-  <h1 style="margin: 8px 0 4px 0; color:#0f172a;">Digital Desert Story: North-eastern Cambodia</h1>
-  <p style="margin: 0; color:#334155;">
+  <div class="story-pill">Interpretability First</div>
+  <div class="story-pill">Policy-Oriented</div>
+  <h1 style="margin: 8px 0 4px 0; color:#f8fafc;">Digital Desert Story: North-eastern Cambodia</h1>
+  <p style="margin: 0; color:#cbd5e1;">
     A guided narrative to identify where communities face the double burden of flood vulnerability and weak network access.
   </p>
 </div>
@@ -387,72 +521,96 @@ def render_page_start(data):
 
 
 def render_page_data(data):
-    st.subheader("Data")
-    source_df = pd.DataFrame(
-        [
-            ["MRD Indigenous Villages", "Community location and ethnicity", "Village-level context"],
-            ["Registered Communal Lands", "Community points and family counts", "Community-level profiling"],
-            ["Flood Risk Analysis", "Province flood signal where available", "One component in flood vulnerability"],
-            ["OpenStreetMap / Overpass (Waterways)", "Rivers/streams/water points", "Flood proximity proxy"],
-            ["OpenTopoData (SRTM90m)", "Community elevation", "Low elevation flood sensitivity proxy"],
-            ["OpenStreetMap / Overpass", "Telecom structure proxy points", "Network-distance proxy"],
-        ],
-        columns=["Source", "What it contributes", "Why it matters"],
-    )
-    st.dataframe(source_df, use_container_width=True, hide_index=True)
+    st.subheader("Data Sources")
+    if data["model_communities"] is None:
+        st.warning("Model outputs not found. Run `python build_digital_desert_model.py` first.")
+        return
 
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        by_province = data["province_model_metrics"].copy() if data["province_model_metrics"] is not None else data["lands"]["province"].value_counts().reset_index()
-        if "communities" not in by_province.columns:
-            by_province.columns = ["province", "communities"]
-        fig = px.bar(
-            by_province,
-            x="province",
-            y="communities",
-            title="Communities Covered by Province",
-            color="communities",
-            color_continuous_scale="Tealgrn",
-        )
+    model = data["model_communities"].copy()
+    model["risk_score"] = pd.to_numeric(model["risk_score"], errors="coerce")
+    model["nearest_tower_km"] = pd.to_numeric(model["nearest_tower_km"], errors="coerce")
+    model["nearest_water_km"] = pd.to_numeric(model["nearest_water_km"], errors="coerce")
+    model["elevation_m"] = pd.to_numeric(model["elevation_m"], errors="coerce")
+
+    p = data["province_model_metrics"].copy() if data["province_model_metrics"] is not None else None
+
+    st.markdown("#### Source-to-Feature Map")
+    src_cards = st.columns(6)
+    card_payload = [
+        ("MRD Indigenous Villages", "Community location and indigenous context"),
+        ("Registered Communal Lands", "Family counts and local population proxy"),
+        ("Flood Risk Inputs", "Provincial flood signal for vulnerability"),
+        ("OSM Waterways", "Water proximity proxy for flood exposure"),
+        ("OpenTopoData Elevation", "Terrain sensitivity signal"),
+        ("OSM Telecom Infrastructure", "Nearest network-distance proxy"),
+    ]
+    for idx, (title, desc) in enumerate(card_payload):
+        with src_cards[idx]:
+            st.markdown(f'<div class="source-card"><h5>{title}</h5><p>{desc}</p></div>', unsafe_allow_html=True)
+
+    st.markdown("")
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.markdown('<div class="insight-card"><div class="insight-title">MRD + Communal Lands</div><div class="insight-sub">Who and where are the target communities?</div></div>', unsafe_allow_html=True)
+        by_prov = model["province"].value_counts().reset_index()
+        by_prov.columns = ["province", "communities"]
+        fig = px.bar(by_prov, x="province", y="communities", color="communities", color_continuous_scale="Tealgrn")
+        fig.update_layout(height=320, margin=dict(l=8, r=8, t=10, b=10))
         st.plotly_chart(fig, use_container_width=True)
+        st.caption("Community records come from official indigenous communal land data.")
 
-    with col2:
-        flood = data["province_model_metrics"].copy() if data["province_model_metrics"] is not None else pd.DataFrame(columns=["province", "risk_score"])
-        if "avg_flood_score" in flood.columns:
-            flood = flood.sort_values("avg_flood_score", ascending=False)
-            ycol = "avg_flood_score"
-            title = "Flood Vulnerability Score by Province (Harmonized)"
+    with c2:
+        st.markdown('<div class="insight-card"><div class="insight-title">Flood Vulnerability Inputs</div><div class="insight-sub">Flood signal + water proximity + elevation</div></div>', unsafe_allow_html=True)
+        flood_df = p.sort_values("avg_flood_score", ascending=False) if p is not None else pd.DataFrame()
+        if not flood_df.empty:
+            fig = px.bar(flood_df, x="province", y="avg_flood_score", color="avg_flood_score", color_continuous_scale="OrRd")
         else:
-            flood = data["flood"].copy()
-            flood["risk_score"] = pd.to_numeric(flood["risk_score"], errors="coerce")
-            flood = flood.dropna(subset=["risk_score"]).sort_values("risk_score", ascending=False)
-            ycol = "risk_score"
-            title = "Flood Risk Score by Province"
-        fig = px.bar(
-            flood,
-            x="province",
-            y=ycol,
-            title=title,
-            color=ycol,
-            color_continuous_scale="OrRd",
-        )
+            tmp = model.groupby("province", as_index=False)["risk_score"].mean().rename(columns={"risk_score": "avg_flood_score"})
+            fig = px.bar(tmp, x="province", y="avg_flood_score", color="avg_flood_score", color_continuous_scale="OrRd")
+        fig.update_layout(height=320, margin=dict(l=8, r=8, t=10, b=10))
         st.plotly_chart(fig, use_container_width=True)
+        st.caption("Flood score is harmonized at community level and mapped to provinces for comparison.")
 
-    with col3:
-        if data["province_model_metrics"] is not None:
-            net = data["province_model_metrics"].copy().sort_values("avg_network_distance_km", ascending=False)
-            fig = px.bar(
-                net,
-                x="province",
-                y="avg_network_distance_km",
-                title="Average Distance to Telecom by Province",
-                color="avg_network_distance_km",
-                color_continuous_scale="Blues",
-            )
-            st.plotly_chart(fig, use_container_width=True)
+    with c3:
+        st.markdown('<div class="insight-card"><div class="insight-title">Connectivity Inputs</div><div class="insight-sub">Distance to nearest telecom infrastructure</div></div>', unsafe_allow_html=True)
+        net_df = p.sort_values("avg_network_distance_km", ascending=False) if p is not None else model.groupby("province", as_index=False)["nearest_tower_km"].mean()
+        ycol = "avg_network_distance_km" if "avg_network_distance_km" in net_df.columns else "nearest_tower_km"
+        fig = px.bar(net_df, x="province", y=ycol, color=ycol, color_continuous_scale="Blues")
+        fig.update_layout(height=320, margin=dict(l=8, r=8, t=10, b=10))
+        st.plotly_chart(fig, use_container_width=True)
+        st.caption("Higher values indicate weaker network accessibility for communities.")
 
-    water_points = 0 if data["osm_water_points"] is None else len(data["osm_water_points"])
-    st.caption(f"Harmonized ETL now uses {water_points:,} water points + elevation + telecom proxies at community level.")
+    c4, c5, c6 = st.columns(3)
+    with c4:
+        st.markdown('<div class="insight-card"><div class="insight-title">Waterway Proxy Density</div><div class="insight-sub">Free OSM water points supporting flood proxy</div></div>', unsafe_allow_html=True)
+        water_count = 0 if data["osm_water_points"] is None else len(data["osm_water_points"])
+        tower_count = 0 if data["osm_towers"] is None else len(data["osm_towers"])
+        src_counts = pd.DataFrame({"source": ["Water points", "Cell towers"], "count": [water_count, tower_count]})
+        fig = px.bar(src_counts, x="source", y="count", color="source", color_discrete_sequence=["#38bdf8", "#a78bfa"])
+        fig.update_layout(height=300, margin=dict(l=8, r=8, t=10, b=10), showlegend=False)
+        st.plotly_chart(fig, use_container_width=True)
+        st.caption("OpenStreetMap contributes free geospatial proxies for exposure and connectivity.")
+
+    with c5:
+        st.markdown('<div class="insight-card"><div class="insight-title">Elevation Context</div><div class="insight-sub">Topographic sensitivity from OpenTopoData</div></div>', unsafe_allow_html=True)
+        elev = model[["province", "elevation_m"]].dropna()
+        fig = px.box(elev, x="province", y="elevation_m", color="province")
+        fig.update_layout(height=300, margin=dict(l=8, r=8, t=10, b=10), showlegend=False)
+        st.plotly_chart(fig, use_container_width=True)
+        st.caption("Lower elevations contribute to higher flood vulnerability in the proxy model.")
+
+    with c6:
+        st.markdown('<div class="insight-card"><div class="insight-title">Model Coverage</div><div class="insight-sub">How much data is modeled end-to-end</div></div>', unsafe_allow_html=True)
+        stages = pd.DataFrame(
+            {
+                "stage": ["Communities Ingested", "Flood Proxies Enriched", "Connectivity Enriched", "Final Scored"],
+                "count": [len(model), len(model.dropna(subset=["risk_score"])), len(model.dropna(subset=["nearest_tower_km"])), len(model.dropna(subset=["priority_score"]) if "priority_score" in model.columns else model)],
+            }
+        )
+        fig = px.funnel(stages, x="count", y="stage", color="stage")
+        fig.update_layout(height=300, margin=dict(l=8, r=8, t=10, b=10), showlegend=False)
+        st.plotly_chart(fig, use_container_width=True)
+        st.caption("This shows the full data pipeline coverage from ingestion to model-ready scoring.")
 
 
 def render_page_model(data):
@@ -673,53 +831,108 @@ def render_page_map(data):
         st_folium(m, width=1200, height=700)
 
 
-def render_page_architecture():
-    st.subheader("Architecture & ETL Flow")
-    st.markdown("#### End-to-End Solution")
+def render_page_architecture(data):
+    st.subheader("Architecture")
+    st.markdown("#### One End-to-End Flow (Data → ETL → Modeling → Policy Action)")
+
     st.markdown(
         """
-        <div class="diagram-row">
-          <div class="diagram-card"><h5>1) Source Data</h5>MRD community points, flood inputs, OSM telecom, OSM waterways, elevation API.</div>
-          <div class="diagram-arrow">➜</div>
-          <div class="diagram-card"><h5>2) ETL Pipeline</h5>CRS normalization, null handling, distance features, and flood proxy construction.</div>
-          <div class="diagram-arrow">➜</div>
-          <div class="diagram-card"><h5>3) Modeling</h5>Transparent rule-based classes A-E from flood risk, connectivity distance, and population.</div>
-          <div class="diagram-arrow">➜</div>
-          <div class="diagram-card"><h5>4) Dashboard</h5>Interactive map + policy table + explainable visuals for committee review.</div>
+        <div class="flow-wrap">
+          <div class="flow-row">
+            <div class="flow-node"><h5>Source Layer</h5>MRD villages + communal lands, flood references, OSM telecom/water points, elevation API.</div>
+            <div class="flow-arrow">➜</div>
+            <div class="flow-node"><h5>ETL Layer</h5>CRS alignment, null handling, deduplication, distance enrichment, standardized community feature store.</div>
+            <div class="flow-arrow">➜</div>
+            <div class="flow-node"><h5>Modeling Layer</h5>Rule-based thresholds for flood, low connectivity, and population pressure to produce classes A-E.</div>
+            <div class="flow-arrow">➜</div>
+            <div class="flow-node"><h5>Decision Layer</h5>Hotspot prioritization, phased intervention packages, and transparent monitoring indicators.</div>
+          </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
-    st.markdown("#### ETL Layers")
-    st.markdown(
-        """
-        <div class="diagram-row">
-          <div class="diagram-card"><h5>Bronze</h5>Raw files and API pulls.</div>
-          <div class="diagram-arrow">➜</div>
-          <div class="diagram-card"><h5>Silver</h5>Standardized geometry, cleaned fields, derived distances and elevation.</div>
-          <div class="diagram-arrow">➜</div>
-          <div class="diagram-card"><h5>Gold</h5>Community risk dataset + summary tables ready for dashboard.</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.markdown("#### Modeling Logic")
-    st.markdown(
-        """
-        <div class="diagram-row">
-          <div class="diagram-card"><h5>Inputs</h5>Flood proxy score, distance to tower, population proxy.</div>
-          <div class="diagram-arrow">➜</div>
-          <div class="diagram-card"><h5>Rules</h5>Threshold-based interpretability (no black-box clustering).</div>
-          <div class="diagram-arrow">➜</div>
-          <div class="diagram-card"><h5>Output</h5>Classes A-E + priority ranking for interventions.</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+
+    if data["model_communities"] is not None:
+        model = build_priority_frame(data["model_communities"], data["model_thresholds"])
+        raw_count = len(model)
+        etl_ready = len(model.dropna(subset=["risk_score", "nearest_tower_km", "est_population_community"]))
+        scored = len(model.dropna(subset=["priority_score"]))
+        hotspots = model[model["priority_score"] >= model["priority_score"].quantile(0.7)]
+        hotspot_count = len(hotspots)
+
+        left, right = st.columns([1.4, 1], gap="medium")
+        with left:
+            sankey = go.Figure(
+                data=[
+                    go.Sankey(
+                        arrangement="snap",
+                        node=dict(
+                            pad=24,
+                            thickness=18,
+                            line=dict(color="#1e293b", width=1),
+                            label=["Source Records", "ETL Harmonized", "Scored by Rules", "Priority Portfolio", "Action Queue"],
+                            color=["#1d4ed8", "#0ea5e9", "#14b8a6", "#f59e0b", "#ef4444"],
+                        ),
+                        link=dict(
+                            source=[0, 1, 2, 3],
+                            target=[1, 2, 3, 4],
+                            value=[raw_count, etl_ready, scored, hotspot_count],
+                            color=["rgba(59,130,246,0.35)", "rgba(6,182,212,0.35)", "rgba(20,184,166,0.35)", "rgba(245,158,11,0.35)"],
+                        ),
+                    )
+                ]
+            )
+            sankey.update_layout(
+                title="Pipeline Throughput (Simple Flow)",
+                height=360,
+                margin=dict(l=8, r=8, t=48, b=8),
+                font=dict(size=13),
+            )
+            st.plotly_chart(sankey, use_container_width=True)
+
+        with right:
+            class_counts = (
+                model["digital_desert_class"]
+                .fillna("Unknown")
+                .value_counts()
+                .rename_axis("class")
+                .reset_index(name="count")
+            )
+            pie = px.pie(
+                class_counts,
+                names="class",
+                values="count",
+                hole=0.52,
+                color="class",
+                color_discrete_map=CLASS_COLORS,
+                title="Modeled Class Mix",
+            )
+            pie.update_layout(height=360, margin=dict(l=8, r=8, t=48, b=8), legend_title="")
+            st.plotly_chart(pie, use_container_width=True)
+
+        stage_df = pd.DataFrame(
+            {
+                "Stage": ["Source Records", "ETL Harmonized", "Rule Scored", "Top Priority"],
+                "Count": [raw_count, etl_ready, scored, hotspot_count],
+            }
+        )
+        bars = px.bar(
+            stage_df,
+            x="Count",
+            y="Stage",
+            orientation="h",
+            color="Stage",
+            text="Count",
+            color_discrete_sequence=["#2563eb", "#0ea5e9", "#14b8a6", "#f59e0b"],
+        )
+        bars.update_layout(height=280, margin=dict(l=8, r=8, t=18, b=8), showlegend=False)
+        bars.update_traces(textposition="outside")
+        st.plotly_chart(bars, use_container_width=True)
+
     st.markdown(
         """
         <div class="mini-note">
-        <b>Why this design:</b> the committee can trace every score back to data and rules, making policy decisions auditable.
+        <b>Why this architecture works:</b> each policy decision can be audited back to one transformed feature and one explicit rule, which keeps the model interpretable for committee review and implementation teams.
         </div>
         """,
         unsafe_allow_html=True,
@@ -733,44 +946,103 @@ def render_page_actions(data):
         return
 
     model = build_priority_frame(data["model_communities"], data["model_thresholds"])
-    shortlist = model.sort_values(["priority_score"], ascending=False).head(12)
+    shortlist = model.sort_values(["priority_score"], ascending=False).head(15).copy()
+    shortlist["community"] = shortlist["ip_name"].fillna("Unknown")
 
-    view = shortlist[
-        [
-            "ip_name",
-            "province",
-            "num_family",
-            "est_population_community",
-            "nearest_tower_km",
-            "risk_score",
-            "priority_score",
-            "digital_desert_class",
-        ]
-    ].copy()
-    view.columns = [
-        "Community",
-        "Province",
-        "Families",
-        "Est. Population",
-        "Distance to Telecom (km)",
-        "Flood Risk Score",
-        "Priority Score",
-        "Class",
-    ]
-    st.dataframe(view, use_container_width=True, hide_index=True, height=380)
+    c1, c2 = st.columns([1.2, 1], gap="medium")
+    with c1:
+        fig = px.bar(
+            shortlist.sort_values("priority_score", ascending=True),
+            x="priority_score",
+            y="community",
+            color="digital_desert_class",
+            color_discrete_map=CLASS_COLORS,
+            orientation="h",
+            labels={"priority_score": "Priority score", "community": "Community"},
+            title="Top Priority Communities",
+        )
+        fig.update_layout(height=520, margin=dict(l=8, r=8, t=48, b=8), legend_title="")
+        st.plotly_chart(fig, use_container_width=True)
+
+    with c2:
+        bubble = px.scatter(
+            shortlist,
+            x="nearest_tower_km",
+            y="risk_score",
+            size="est_population_community",
+            color="digital_desert_class",
+            color_discrete_map=CLASS_COLORS,
+            hover_name="community",
+            title="Risk-Connectivity-Scale Lens",
+            labels={
+                "nearest_tower_km": "Distance to telecom (km)",
+                "risk_score": "Flood risk score",
+            },
+        )
+        bubble.update_layout(height=520, margin=dict(l=8, r=8, t=48, b=8), legend_title="")
+        st.plotly_chart(bubble, use_container_width=True)
+
+    st.markdown("#### Phased Intervention Plan")
+    p1, p2, p3 = st.columns(3, gap="medium")
+    with p1:
+        st.markdown(
+            """
+            <div class="phase-card">
+              <h5>Phase 1 (0-3 months)</h5>
+              Emergency connectivity and flood-alert readiness for top A/B communities with longest tower distance.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with p2:
+        st.markdown(
+            """
+            <div class="phase-card">
+              <h5>Phase 2 (4-9 months)</h5>
+              Add shared internet points, school/health digital access hubs, and targeted digital-skills support.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with p3:
+        st.markdown(
+            """
+            <div class="phase-card">
+              <h5>Phase 3 (10-18 months)</h5>
+              Expand to next-priority communities using monitored improvements in risk exposure and access distance.
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    prov_actions = (
+        shortlist.groupby("province", as_index=False)
+        .agg(
+            hotspot_count=("community", "count"),
+            avg_priority=("priority_score", "mean"),
+            avg_distance_km=("nearest_tower_km", "mean"),
+        )
+        .sort_values("avg_priority", ascending=False)
+    )
+    fig2 = px.bar(
+        prov_actions,
+        x="province",
+        y="hotspot_count",
+        color="avg_priority",
+        color_continuous_scale="Sunset",
+        title="Where to Start First (Province Portfolio)",
+        hover_data=["avg_distance_km"],
+    )
+    fig2.update_layout(height=340, margin=dict(l=8, r=8, t=48, b=8))
+    st.plotly_chart(fig2, use_container_width=True)
 
     st.markdown(
         """
-### Suggested phased plan
-1. **First 3 months**: target the farthest high-priority communities with emergency alert channels.
-2. **Months 4-9**: add community internet access points and local digital training.
-3. **Months 10-18**: evaluate outcomes and expand to next tier communities.
-        """
-    )
-
-    st.warning(
-        "Important: This model is intentionally simple and interpretable. "
-        "It is for transparent prioritization, not for replacing detailed field validation."
+        <div class="mini-note">
+        <b>How the solution architecture executes this plan:</b> the ETL layer refreshes community features, the rule-based model recalculates class and priority scores, and the dashboard updates province portfolios so decision-makers can re-sequence interventions using the same transparent logic every cycle.
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
 
@@ -789,12 +1061,12 @@ if "page" not in st.session_state:
 
 st.markdown('<div class="nav-wrap">', unsafe_allow_html=True)
 nav_items = [
-    ("🏠 Overview", "Overview"),
-    ("🧾 Data Sources", "Data Sources"),
-    ("🧠 Model Logic", "Model Logic"),
-    ("🗺️ Risk Map", "Risk Map"),
-    ("🎯 Action Plan", "Action Plan"),
-    ("🧩 Architecture", "Architecture"),
+    ("Overview", "Overview"),
+    ("Data Sources", "Data Sources"),
+    ("Model Logic", "Model Logic"),
+    ("Risk Map", "Risk Map"),
+    ("Action Plan", "Action Plan"),
+    ("Architecture", "Architecture"),
 ]
 nav_cols = st.columns(len(nav_items))
 for idx, (label, value) in enumerate(nav_items):
@@ -814,7 +1086,7 @@ elif current_page == "Model Logic":
 elif current_page == "Risk Map":
     render_page_map(data)
 elif current_page == "Architecture":
-    render_page_architecture()
+    render_page_architecture(data)
 else:
     render_page_actions(data)
 

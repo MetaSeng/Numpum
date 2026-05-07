@@ -38,6 +38,27 @@ python build_digital_desert_model.py
 - OpenStreetMap (via Overpass API) for waterways/water proxies
 - OpenTopoData (`srtm90m`) for community elevation
 
+### Source endpoints (for reproducibility)
+
+1. OpenStreetMap / Overpass API
+   - Primary: `https://overpass-api.de/api/interpreter`
+   - Fallback: `https://overpass.kumi.systems/api/interpreter`
+   - Used for:
+     - telecom proxy extraction -> `processed_data/07_osm_telecom_towers.geojson`
+     - water proxy extraction -> `processed_data/07b_osm_water_points.geojson`
+
+2. OpenTopoData API (`srtm90m`)
+   - Endpoint: `https://api.opentopodata.org/v1/srtm90m`
+   - Used for:
+     - community elevation enrichment -> `processed_data/08_digital_desert_communities.geojson`
+
+### Added datasets in this update (new vs earlier submission)
+- OSM telecom proxy points (new external pull)
+- OSM waterway/water proxy points (new external pull)
+- OpenTopoData elevation values per community (new external pull)
+
+All newly added external sources are free/open sources.
+
 ## Important interpretation notes
 - OSM telecom and water points are **proxies**, not official infrastructure inventories.
 - Distances are straight-line geodesic approximations from mapped points.
