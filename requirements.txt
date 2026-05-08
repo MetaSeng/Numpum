@@ -1,9 +1,8 @@
 streamlit==1.28.1
 streamlit-folium==0.12.0
-streamlit-elements==0.1.0
 plotly==5.17.0
 pandas==2.1.4
-numpy==1.24.3
+numpy==1.26.4
 geopandas==0.14.0
 folium==0.14.0
 shapely==2.0.2

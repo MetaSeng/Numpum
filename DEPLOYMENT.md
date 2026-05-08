@@ -19,7 +19,8 @@ References:
 3. Go to [share.streamlit.io](https://share.streamlit.io/) and sign in with GitHub.
 4. Click `Create app`.
 5. Select your repo, branch, and set the main file path to `dashboard.py`.
-6. Click `Deploy`.
+6. Open `Advanced settings` and select Python `3.11`.
+7. Click `Deploy`.
 
 ## Notes for free hosting behavior
 - Apps can sleep after inactivity and wake on next visit.
@@ -28,4 +29,6 @@ References:
 ## If deployment fails
 1. Open app logs in Streamlit Cloud and check the first error.
 2. Ensure `processed_data/` exists in the repo (not only local machine).
-3. Re-run your ETL notebook and commit regenerated files if any are missing.
+3. Ensure the Streamlit app settings use main file path `dashboard.py`, not `build_digital_desert_model.py`.
+4. Ensure the Streamlit app settings use Python `3.11`.
+5. Re-run your ETL notebook and commit regenerated files if any are missing.
